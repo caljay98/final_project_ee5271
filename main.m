@@ -18,11 +18,10 @@ timestamps = 0:(1/video.FrameRate):((numframes-1)/video.FrameRate);
 angles = zeros(1, numframes);
 
 % find the slip angle of each frame. Save the data to an array
-%for c = 1:numframes
-%    c
-%    angles(c) = calculate_slip_angle(vidframes(:, :, :, c), 0);
-%end
-test = calculate_slip_angle(vidframes(:, :, :, 700), 0)
+for c = 1:numframes
+    fprintf('frame: %d / %d\n', c, numframes);
+    angles(c) = calculate_slip_angle(vidframes(:, :, :, c), 0);
+end
 
 % Export the array with each slip angle along with a timestamp to a CSV
 csv_file_name = strcat(video.Name, '.csv');
@@ -49,7 +48,7 @@ if gdat_file == -1
 end
 
 % write the gdat header
-fprintf(gdat_file, '/dlm_data_YYYYMMDD_HHMMSS.gdat:\r\n');
+fprintf(gdat_file, '/dlm_data_11112233_445566.gdat:\r\n');
 for c = 1:numframes
     print_gdat_data_point(gdat_file, timestamps(c), angles(c));
 end
@@ -78,9 +77,9 @@ function print_gdat_data_point(file, ts, data)
     gdat_byte_write(file, ts_bytes(2));
     gdat_byte_write(file, ts_bytes(1));
     
-    % add the sensor ID (2bytes). this will always be 0 for this demo
+    % add the sensor ID (2bytes). this will always be 0x00 0x01 for this demo
     gdat_byte_write(file, 0);
-    gdat_byte_write(file, 0);
+    gdat_byte_write(file, 1);
     
     % convert the data to a 32bit float and append it, MSB first
     data_bytes = swapbytes(typecast(single(data), 'uint8'));

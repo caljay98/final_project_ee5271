@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<LDXFile Locale="English_United States.1252" DefaultLocale="C" Version="1.6">
+ <Videos>
+  <View Name="GolfCartRun">
+   <Source FileName=".\samples\GolfCartRun.mp4">
+    <SyncPoints Balance="0">
+     <SyncPoint DataTime="0" VideoTime="0" Manual="1"/>
+    </SyncPoints>
+   </Source>
+  </View>
+ </Videos>
+ <Layers>
+  <Details>
+   <String Id="Total Laps" Value="1"/>
+   <String Id="Fastest Time" Value="0:38.860"/>
+   <String Id="Fastest Lap" Value="0"/>
+  </Details>
+ </Layers>
+</LDXFile>
