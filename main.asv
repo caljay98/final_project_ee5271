@@ -7,24 +7,20 @@ vidname = 'samples/GolfCartRun.mp4';
 
 % import a video file as an array of frames
 video = VideoReader(vidname);
-%numframes = video.NumFrames; DEBUG
-numframes = 30
+numframes = video.NumFrames;
 vidframes = zeros(video.Height, video.Width, 3, numframes, 'uint8');
 for c = 1:numframes
     vidframes(:, :, :, c) = readFrame(video);
 end
-
-% process each frame to remove fisheye, increase contrast, and other things
-% if needed
-% TODO use this based on real data
 
 % create all of the output arrays
 timestamps = 0:(1/video.FrameRate):((numframes-1)/video.FrameRate);
 angles = zeros(1, numframes);
 
 % find the slip angle of each frame. Save the data to an array
-% TODO @sam
-angles = sin(timestamps*pi);
+for c = 1:numframes
+    
+end
 
 % Export the array with each slip angle along with a timestamp to a CSV
 csv_file_name = strcat(video.Name, '.csv');
@@ -52,7 +48,11 @@ fclose('all');
 % helper functions
 function print_gdat_data_point(file, ts, data)
     % first byte point is 0x7E
-    fwrite(file, '%c', 0x7e);
+    fwrite(file, 0x7e);
+    
+    % for all of the bytes in the actual message, check to make sure they
+    % are not 0x7e or 0x7e. If they are, use the escape byte (0x7d) to
+    % properly encode the data
 
     % convert the timestamp to ms (uint32). Theoredically the 'swapbytes'
     % function accounts for endieness but this has only been tested on an
@@ -61,19 +61,31 @@ function print_gdat_data_point(file, ts, data)
     ts_bytes = swapbytes(typecast(ts_ms, 'uint8'));
     
     % append the bytes, MSB first
-    fwrite(file, ts_bytes(4));
-    fwrite(file, ts_bytes(3));
-    fwrite(file, ts_bytes(2));
-    fwrite(file, ts_bytes(1));
+    gdat_byte_write(file, ts_bytes(4));
+    gdat_byte_write(file, ts_bytes(3));
+    gdat_byte_write(file, ts_bytes(2));
+    gdat_byte_write(file, ts_bytes(1));
     
     % add the sensor ID (2bytes). this will always be 0 for this demo
-    fwrite(file, 0);
-    fwrite(file, 0);
+    gdat_byte_write(file, 0);
+    gdat_byte_write(file, 0);
     
     % convert the data to a 32bit float and append it, MSB first
-    
-    % check for 0x7E or 0x7D in the data. If there is, use the escape
+    data_bytes = swapbytes(typecast(single(data), 'uint8'));
+    gdat_byte_write(file, data_bytes(4));
+    gdat_byte_write(file, data_bytes(3));
+    gdat_byte_write(file, data_bytes(2));
+    gdat_byte_write(file, data_bytes(1));
+end
+
+function gdat_byte_write(file, byte)
+    % check for 0x7e or 0x7d in the data. If there is, use the escape
     % byte and XOR the next byte with 0x20
-    
-    % string is ready to go
+    if byte == 0x7e || byte == 0x7d
+        fwrite(file, 0x7d);
+        fwrite(file, bitxor(byte, 0x20));
+    else
+        % just write the byte normally
+        fwrite(file, byte);
+    end
 end

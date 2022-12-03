@@ -13,21 +13,25 @@ for c = 1:numframes
     vidframes(:, :, :, c) = readFrame(video);
 end
 
-% process each frame to remove fisheye, increase contrast, and other things
-% if needed
-% TODO use this based on real data
-
 % create all of the output arrays
 timestamps = 0:(1/video.FrameRate):((numframes-1)/video.FrameRate);
 angles = zeros(1, numframes);
 
 % find the slip angle of each frame. Save the data to an array
-% TODO @sam
-angles = sin(timestamps*pi);
+%for c = 1:numframes
+%    c
+%    angles(c) = calculate_slip_angle(vidframes(:, :, :, c), 0);
+%end
+test = calculate_slip_angle(vidframes(:, :, :, 700), 0)
 
 % Export the array with each slip angle along with a timestamp to a CSV
 csv_file_name = strcat(video.Name, '.csv');
 csv_file = fopen(csv_file_name, 'w+');
+
+% make sure the file actually opened
+if csv_file == -1
+    error('Failed to open file!')
+end
 
 % print the header for the CSV
 fprintf(csv_file, 'Timestamp (s), Slip Angle (deg)\n');
@@ -38,6 +42,11 @@ end
 % also export as a GDAT so it can be imported to i2
 gdat_file_name = strcat(video.Name, '.gdat');
 gdat_file = fopen(gdat_file_name, 'w+');
+
+% make sure the file actually opened
+if gdat_file == -1
+    error('Failed to open file!')
+end
 
 % write the gdat header
 fprintf(gdat_file, '/dlm_data_YYYYMMDD_HHMMSS.gdat:\r\n');
