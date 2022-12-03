@@ -1,7 +1,7 @@
 
 %% Load Image
 video = VideoReader('samples/GolfCartRun.mp4');
-testFrame = read(video, 700);
+testFrame = read(video, 600);
 
 %% Gray Scale
 % Remove color data
@@ -11,7 +11,7 @@ idisp(testFrame);
 
 %% Niblack Relative Comparisons
 % Transform gray scale data to binary data
-% Creates clusters of value 1 pixels that are
+% Creates pixel clusters of value 1 pixels that are
 % shaped in the general direction of travel
 figure(2);
 niblack_testFrame = niblack(testFrame, -0.1, 20);
@@ -42,35 +42,69 @@ end
 figure(4);
 idisp(conv_testFrame);
 
-%% Pixel Clustering
-testCoords = [1 433];
-% cluster_coords = cluster(conv_testFrame, [], testCoords);
-
-cluster_coords = cluster_iterate(morph_testFrame, testCoords);
-
+%% Pixel Clustering, Best Fit Line, and Slip Angle Calculation
+cluster_coords = [];
+slip_angles = [];
 cluster_testFrame = conv_testFrame;
-for i=1:1:height(cluster_coords)
-    cluster_testFrame(cluster_coords(i,1), cluster_coords(i,2)) = 0.5;
-end
+
 figure(5);
-idisp(cluster_testFrame);
-
-%% Best Fit Line
-% With each array of coordinates from pixel clustering
-% Find the best fit line across the data
-% and use it to find the slip angle
-line = polyfit(cluster_coords(:,1), cluster_coords(:,2), 1);
-X = cluster_coords(:,1);
-Y = line(1)*X + line(2);
 hold on
-plot(Y,X);
-hold off
 
-theta = atan((line(2)/line(1))/line(2));
-% theta = pi - theta;
-theta = (pi/2) - theta;
-theta = rad2deg(theta);
-disp(strcat('Slip Angle = ', num2str(theta, 5)));
+%Start at the top left of the image and iterate over each pixel
+% until the bottom right is reached
+for i = 2:1:height(cluster_testFrame)-1
+    for j = 2:1:width(cluster_testFrame)-1
+        coords = [i j];
+
+        %If a pixel is 1, then it's an unvisited cluster
+        if cluster_testFrame(i, j)==1
+
+            %Iterate over the cluster and return all the image
+            % coordinates in that cluster
+            cluster_coords = cluster_iterate(cluster_testFrame, coords);
+
+            %Set all pixel values in the returned cluster to 0.5
+            for k=1:1:height(cluster_coords)
+                cluster_testFrame(cluster_coords(k,1), cluster_coords(k,2)) = 0.5;
+            end
+
+            %For clusters with more than 200 pixels
+            if height(cluster_coords)>200
+                %Find the linear equation of the best fit line over the
+                % cluster
+                line = polyfit(cluster_coords(:,1), cluster_coords(:,2), 1);
+
+                X = cluster_coords(:,1);
+                Y = line(1)*X + line(2);
+                plot(Y,X);
+
+                %Find the angle from the vertical axis with arctan
+                % using the y-intercept and x-intercept distances
+                if line(1)>0
+                    theta = atan((line(2)/line(1))/line(2));
+                    theta = (pi/2) - theta;
+                    theta = rad2deg(theta);
+                    slip_angles = [slip_angles theta];
+%                     disp(strcat('Slip Angle = ', num2str(theta, 5)));
+                elseif line(1)<0
+                    theta = atan(abs(line(2)/line(1))/line(2));
+                    theta = pi - theta;
+                    theta = (pi/2) - theta;
+                    theta = rad2deg(theta);
+                    slip_angles = [slip_angles theta];
+%                     disp(strcat('Slip Angle = ', num2str(theta, 5)));
+                end
+            end
+        end
+    end
+end
+
+%Calculate the slip angle for this video frame by averaging all angles
+disp(strcat('Slip Angle = ', num2str(mean(slip_angles), 5)));
+hold off
+figure(6);
+idisp(cluster_testFrame);
+copyobj(findobj(5,'type','line'), findobj(6,'type','axes'));
 
 %% Cluster Function
 % This function starts at an input coordinate pair that has a value of 1
@@ -82,17 +116,17 @@ disp(strcat('Slip Angle = ', num2str(theta, 5)));
 function coords = cluster_iterate(image, startCoords)
 
     testCoords = startCoords;
-    return_value = [testCoords];
+    return_value = [];
 
     while ~isequal(testCoords, -1)
         nextCoords = -1;
-        if testCoords(1)<height(image) && testCoords(2)<width(image)
+        if 1<testCoords(1) && testCoords(1)<height(image) && 1<testCoords(2) && testCoords(2)<width(image)
             return_value = [return_value; testCoords];
             if image(testCoords(1)+1, testCoords(2))==1
                 nextCoords = [testCoords(1)+1 testCoords(2)];
             end
         
-            while image(testCoords(1), testCoords(2)+1)==1
+            while testCoords(2)+1<width(image) && image(testCoords(1), testCoords(2)+1)==1
                 return_value = [return_value; [testCoords(1) testCoords(2)+1]];
                 if image(testCoords(1)+1, testCoords(2)+1)==1
                     nextCoords = [testCoords(1)+1 testCoords(2)+1];
@@ -100,7 +134,7 @@ function coords = cluster_iterate(image, startCoords)
                 testCoords = [testCoords(1) testCoords(2)+1];
             end
         
-            while ~isequal(nextCoords, -1) && image(nextCoords(1), nextCoords(2)-1)~=0
+            while ~isequal(nextCoords, -1) && 1<nextCoords(2)-1 && image(nextCoords(1), nextCoords(2)-1)~=0
                 nextCoords = [nextCoords(1) nextCoords(2)-1];
             end
         end
