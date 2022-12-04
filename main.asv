@@ -3,7 +3,7 @@
 % EE 5271
 
 % what video we are analyzing
-vidname = 'samples/GolfCartRun.mp4';
+vidname = 'samples/11-26-22-';
 
 % import a video file as an array of frames
 video = VideoReader(vidname);
@@ -19,12 +19,18 @@ angles = zeros(1, numframes);
 
 % find the slip angle of each frame. Save the data to an array
 for c = 1:numframes
-    
+    fprintf('frame: %d / %d\n', c, numframes);
+    angles(c) = calculate_slip_angle(vidframes(:, :, :, c), 0);
 end
 
 % Export the array with each slip angle along with a timestamp to a CSV
 csv_file_name = strcat(video.Name, '.csv');
 csv_file = fopen(csv_file_name, 'w+');
+
+% make sure the file actually opened
+if csv_file == -1
+    error('Failed to open file!')
+end
 
 % print the header for the CSV
 fprintf(csv_file, 'Timestamp (s), Slip Angle (deg)\n');
@@ -36,8 +42,13 @@ end
 gdat_file_name = strcat(video.Name, '.gdat');
 gdat_file = fopen(gdat_file_name, 'w+');
 
+% make sure the file actually opened
+if gdat_file == -1
+    error('Failed to open file!')
+end
+
 % write the gdat header
-fprintf(gdat_file, '/dlm_data_YYYYMMDD_HHMMSS.gdat:\r\n');
+fprintf(gdat_file, '/dlm_data_11112233_445566.gdat:\r\n');
 for c = 1:numframes
     print_gdat_data_point(gdat_file, timestamps(c), angles(c));
 end
@@ -66,9 +77,9 @@ function print_gdat_data_point(file, ts, data)
     gdat_byte_write(file, ts_bytes(2));
     gdat_byte_write(file, ts_bytes(1));
     
-    % add the sensor ID (2bytes). this will always be 0 for this demo
+    % add the sensor ID (2bytes). this will always be 0x00 0x01 for this demo
     gdat_byte_write(file, 0);
-    gdat_byte_write(file, 0);
+    gdat_byte_write(file, 1);
     
     % convert the data to a 32bit float and append it, MSB first
     data_bytes = swapbytes(typecast(single(data), 'uint8'));

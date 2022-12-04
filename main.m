@@ -3,14 +3,18 @@
 % EE 5271
 
 % what video we are analyzing
-vidname = 'samples/GolfCartRun.mp4';
+vidname = 'samples/11-26-22-sam-drive2.MOV';
 
 % import a video file as an array of frames
 video = VideoReader(vidname);
 numframes = video.NumFrames;
-vidframes = zeros(video.Height, video.Width, 3, numframes, 'uint8');
+
+% video too big
+numframes = 3000;
+
+vidframes = zeros(video.Width, video.Height, 3, numframes, 'uint8');
 for c = 1:numframes
-    vidframes(:, :, :, c) = readFrame(video);
+    vidframes(:, :, :, c) = imrotate(readFrame(video), 90);
 end
 
 % create all of the output arrays

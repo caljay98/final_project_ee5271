@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<LDXFile Locale="English_United States.1252" DefaultLocale="C" Version="1.6">
+ <Videos>
+  <View Name="11-26-22-sam-drive2">
+   <Source FileName=".\samples\11-26-22-sam-drive2.MOV">
+    <SyncPoints Balance="0">
+     <SyncPoint DataTime="0" VideoTime="0" Manual="1"/>
+    </SyncPoints>
+   </Source>
+  </View>
+  <View Name="Camera View 1">
+   <Source FileName=".\samples\11-26-22-sam-drive2-driver.MOV">
+    <SyncPoints Balance="0">
+     <SyncPoint DataTime="1.13142e+07" VideoTime="0" Manual="1"/>
+    </SyncPoints>
+   </Source>
+  </View>
+ </Videos>
+ <Layers>
+  <Details>
+   <String Id="Total Laps" Value="1"/>
+   <String Id="Fastest Time" Value="1:39.932"/>
+   <String Id="Fastest Lap" Value="0"/>
+  </Details>
+ </Layers>
+</LDXFile>
