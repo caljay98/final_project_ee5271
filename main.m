@@ -12,19 +12,15 @@ numframes = video.NumFrames;
 % video too big
 numframes = 3000;
 
-vidframes = zeros(video.Width, video.Height, 3, numframes, 'uint8');
-for c = 1:numframes
-    vidframes(:, :, :, c) = imrotate(readFrame(video), 90);
-end
-
 % create all of the output arrays
 timestamps = 0:(1/video.FrameRate):((numframes-1)/video.FrameRate);
 angles = zeros(1, numframes);
 
 % find the slip angle of each frame. Save the data to an array
 for c = 1:numframes
+    this_frame = imrotate(readFrame(video), 90);
     fprintf('frame: %d / %d\n', c, numframes);
-    angles(c) = calculate_slip_angle(vidframes(:, :, :, c), 0);
+    angles(c) = calculate_slip_angle(this_frame, 0);
 end
 
 % Export the array with each slip angle along with a timestamp to a CSV
